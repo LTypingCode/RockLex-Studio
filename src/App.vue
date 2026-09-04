@@ -160,6 +160,7 @@ import '@directus/vue-split-panel/index.css'
 import HelloWorld from './components/HelloWorld.vue'
 import TheWelcome from './components/TheWelcome.vue'
 import monacoEditor from './components/monacoEditor.vue'
+import type { MonacoEditorExposed } from './components/monacoEditor.vue'
 import * as monaco from 'monaco-editor'
 
 import TabBar from'./components/TabBar.vue'
@@ -213,7 +214,6 @@ function clickMenu(e: MouseEvent | void | boolean) {
 
 // =======================================
 
-const monacoRef = ref<InstanceType<typeof monacoEditor> | null>(null)
 
 // ========= 文件内存缓存 =========
 interface FileCacheItem {
@@ -387,6 +387,7 @@ const tabs = ref<TabItem[]>([
 ])
 const activeTabPath = ref<TabPath>({ dir: 'D:/vue_code_test', name: 'main',  ext: 'js'})
 const currentFile = computed(() => tabs.value.find(item => item.props.path === activeTabPath.value))
+const monacoRef = ref<InstanceType<typeof monacoEditor> & MonacoEditorExposed | null>(null)
 
 // 👉 watch 放在定义之后！监听激活tab切换，加载到编辑器
 watch(activeTabPath, () => {

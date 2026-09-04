@@ -3,16 +3,24 @@
 </template>
 
 <script lang="ts">
+
 import { defineComponent, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { editorProps } from './monacoEditorType'
 import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker'
 import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker'
 import htmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker'
 import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker'
-import pyWorker from './py.worker?worker'
+// import pyWorker from './py.worker?worker'
 import EditorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker'
 import * as monaco from 'monaco-editor'
-import type { ITextModel, ICodeEditorViewState, IStandaloneCodeEditor } from 'monaco-editor'
+import type { editor } from 'monaco-editor'
+
+// 定义父组件可以调用的方法类型
+export interface MonacoEditorExposed {
+  loadFile: (fp: string, content: string, lang: string) => void
+  disposeFileModel: (fp: string) => void
+  getEditor: () => editor.IStandaloneCodeEditor | null
+}
 
 export default defineComponent({
   name: 'monacoEditor',
@@ -34,18 +42,18 @@ export default defineComponent({
         if (['typescript', 'javascript'].includes(label)) {
           return new tsWorker()
         }
-        if (['python'].includes(label)) {
-          return new pyWorker()
-        }
+        // if (['python'].includes(label)) {
+        //   return new pyWorker()
+        // }
         return new EditorWorker()
       },
     }
-    let editor: IStandaloneCodeEditor
+    let editor: editor.IStandaloneCodeEditor
     const codeEditBox = ref()
 
     // 新增：model缓存、视图状态缓存
-    const modelCache = new Map<string, ITextModel>()
-    const viewStateCache = new Map<string, ICodeEditorViewState | null>()
+    const modelCache = new Map<string, editor.ITextModel>()
+    const viewStateCache = new Map<string, editor.ICodeEditorViewState | null>()
 
     const init = () => {
       monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
