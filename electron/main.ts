@@ -29,10 +29,15 @@ let win: BrowserWindow | null
 function createWindow() {
   win = new BrowserWindow({
     icon: path.join(process.env.VITE_PUBLIC, 'electron-vite.svg'),
+    titleBarStyle: 'hidden',
+    minWidth: 400,
+    minHeight: 250,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
     },
   })
+
+  win.setMenu(null);
 
   // Test active push message to Renderer-process.
   win.webContents.on('did-finish-load', () => {

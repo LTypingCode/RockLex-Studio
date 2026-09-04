@@ -541,7 +541,7 @@ async function openFile() {
   overflow: hidden;
 }
 header {
-  height: 40px;
+  height: 35px;
   background: #181818;
   color: #fff;
   display: flex;
@@ -550,6 +550,7 @@ header {
   justify-content: space-between;
   border-bottom: 2px solid var(--line_color);
   user-select: none;
+  -webkit-app-region: drag;
 }
 
 .status_bar {
@@ -592,6 +593,7 @@ header {
   padding: 0 10px;
   font-size:13px;
   color: #ccc;
+  -webkit-app-region: no-drag;
 }
 
 .menu_button:hover {
