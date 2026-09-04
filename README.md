@@ -1,42 +1,28 @@
-# Rocklex Studio
+# RockLex Studio
 
-This template should help get you started developing with Vue 3 in Vite.
+**RockLex Studio** —— 一款面向 Minecraft 基岩版的现代化插件、脚本与资源包编辑器，基于 Electron \+ Vue3 \+ TypeScript 构建，主打轻量化、高效、可视化开发体验。
 
-## Recommended IDE Setup
+## ✨ 项目介绍
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+基岩版插件开发手动改文件、工具零散，效率低、易出错。**RockLex Studio** 整合全套开发流程，一站式完成脚本编写、JSON配置、项目管理、文件预览、一键部署，专为 MCBE 创作者与开发者设计。
 
-## Recommended Browser Setup
+## 🚀 核心功能
 
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
+- [x] 目前处于开发阶段
 
-## Type Support for `.vue` Imports in TS
+- [ ] 开发完成
 
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
+## 🛠 技术栈
 
-## Customize configuration
+- 框架：Vue 3 \+ TypeScript
 
-See [Vite Configuration Reference](https://vite.dev/config/).
+- 桌面端：Electron \+ Electron\-Vite
 
-## Project Setup
+- 编辑器：Monaco Editor
 
-```sh
-npm install
-```
+- 构建：Vite / electron\-builder
 
-### Compile and Hot-Reload for Development
+## 📄 开源协议
 
-```sh
-npm run dev
-```
+MIT License — 自由学习、二次开发与使用
 
-### Type-Check, Compile and Minify for Production
-
-```sh
-npm run build
-```
