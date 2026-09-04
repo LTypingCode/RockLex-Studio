@@ -4,6 +4,8 @@
   "private": true,
   "type": "module",
   "main": "dist-electron/main.js",
+  "description": "RockLex Studio - Minecraft 基岩版插件编辑器",
+  "author": "LTypingCode",
   "build": {
     "appId": "com.rocklex.studio",
     "productName": "Rocklex Studio",
@@ -13,6 +15,9 @@
     "win": {
       "target": "nsis"
     },
+    "linux": {
+      "target": "AppImage"
+    },
     "electronDownload": {
       "mirror": "https://npmmirror.com/mirrors/electron/"
     }
@@ -20,6 +25,9 @@
   "scripts": {
     "dev": "vite",
     "build": "run-p type-check build-only && electron-builder",
+    "build:win": "run-p type-check build-only && electron-builder --win",
+    "build:linux": "run-p type-check build-only && electron-builder --linux",
+    "build:mac": "run-p type-check build-only && electron-builder --mac",
     "preview": "vite preview",
     "build-only": "vite build",
     "type-check": "vue-tsc --build"
