@@ -1,31 +1,3 @@
-// import { ipcRenderer, contextBridge } from 'electron'
-
-// // --------- Expose some API to the Renderer process ---------
-// contextBridge.exposeInMainWorld('ipcRenderer', {
-//   on(...args: Parameters<typeof ipcRenderer.on>) {
-//     const [channel, listener] = args
-//     return ipcRenderer.on(channel, (event, ...args) => listener(event, ...args))
-//   },
-//   off(...args: Parameters<typeof ipcRenderer.off>) {
-//     const [channel, ...omit] = args
-//     return ipcRenderer.off(channel, ...omit)
-//   },
-//   send(...args: Parameters<typeof ipcRenderer.send>) {
-//     const [channel, ...omit] = args
-//     return ipcRenderer.send(channel, ...omit)
-//   },
-//   invoke(...args: Parameters<typeof ipcRenderer.invoke>) {
-//     const [channel, ...omit] = args
-//     return ipcRenderer.invoke(channel, ...omit)
-//   },
-
-//   // You can expose other APTs you need here.
-//   // ...
-// })
-
-
-
-// 👉把 import 替换为 CommonJS require，preload沙箱原生支持
 const { ipcRenderer, contextBridge } = require('electron')
 
 // 👉不要导出完整ipcRenderer！只暴露业务需要的接口
@@ -37,17 +9,21 @@ contextBridge.exposeInMainWorld('electronWindow', {
   isMaximized: () => ipcRenderer.invoke('window:isMaximized')
 })
 
-// 👉TS全局类型声明，给window补充类型，消除vue里面类型报错
-declare global {
-  interface Window {
-    electronWindow?: {
-      minimize(): void
-      toggleMaximize(): void
-      close(): void
-      isMaximized(): Promise<boolean>
-    }
-  }
-}
+
+// 🆕 文件操作 API（必须和 main.ts 里的 ipcMain.handle 频道一一对应）
+contextBridge.exposeInMainWorld('fileAPI', {
+  open: (filters) => ipcRenderer.invoke('file:open', filters),
+  save: (content, filePath) => ipcRenderer.invoke('file:save', content, filePath),
+  saveAs: (content) => ipcRenderer.invoke('file:saveAs', content),
+  new: () => ipcRenderer.invoke('file:new'),
+  getCurrentPath: () => ipcRenderer.invoke('file:getCurrentPath'),
+})
 
 
-
+// invoke 封装
+contextBridge.exposeInMainWorld('electronAPI', {
+  /** 请求-响应型（有返回值），对应主进程 ipcMain.handle */
+  invoke: (channel, ...args) => ipcRenderer.invoke(channel, ...args),
+  /** 单向通知型（无返回值），对应主进程 ipcMain.on */
+  send: (channel, ...args) => ipcRenderer.send(channel, ...args),
+})

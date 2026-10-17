@@ -17,6 +17,9 @@
             <div class="menu_item">新建文件…<div>Ctrl+Alt+Windows+N</div></div>
             <div class="menu_line"></div>
             <div class="menu_item" @click="clickMenu(false);openFile();">打开文件…<div>Ctrl+O</div></div>
+            <div class="menu_line"></div>
+            <div class="menu_item" @click="clickMenu(false);saveFile();">保存<div>Ctrl+S</div></div>
+            <div class="menu_item" @click="clickMenu(false);saveFile();">另存为…<div>Ctrl+Shift+S</div></div>
           </div>
           <div v-if="menuContext.id == 'edit'">
             <div class="menu_item">撤销</div>
@@ -33,7 +36,7 @@
         </div>
 
       </div>
-      <div class="window-btns menu_click" v-if="isTauri">
+      <div class="window-btns menu_click" v-if="true">
         <button @click="minimize">−</button>
         <button @click="toggleMax">□</button>
         <button @click="close">×</button>
@@ -223,6 +226,7 @@ interface FileCacheItem {
 }
 const fileContentCache = new Map<string, FileCacheItem>()
 
+
 // 后缀映射monaco语言
 function extToLang(ext: string): string {
   const map: Record<string, string> = {
@@ -238,7 +242,7 @@ function extToLang(ext: string): string {
 
 // 拼接唯一key
 function makeFilePath(path: TabPath): string {
-  return `${path.dir}/${path.name}.${path.ext}`
+  return `${path.dir}\\${path.name}.${path.ext}`
 }
 
 // 模拟初始化测试文件缓存（你真实项目这里替换为读取磁盘）
@@ -310,11 +314,43 @@ function initMockCache() {
 }
 
 
-
-
 const editorMounted = (editor: monaco.editor.IStandaloneCodeEditor) => {
-  initMockCache()
+	// editor = ins; // 保存编辑器实例
+	initMockCache(); // 初始化mock缓存
+	// 如果默认有激活tab，直接加载
+	if (activeTabPath.value) {
+		loadTabToEditor();
+	}
+
+  // 监听编辑器文本变更
+	editor.onDidChangeModelContent(() => {
+		if (!activeTabPath.value || !editor) return;
+		const fp = makeFilePath(activeTabPath.value);
+		const cacheItem = fileContentCache.get(fp);
+		if (!cacheItem) return;
+
+		const newText = editor.getValue();
+		cacheItem.content = newText;
+		// 判断是否修改，更新tab的dirty
+		const targetTab = tabs.value.find(t => t.props.path === activeTabPath.value);
+		if (targetTab) {
+			targetTab.props.dirty = cacheItem.originContent !== cacheItem.content;
+		}
+	})
 }
+
+/**
+ * 从缓存读取内容，加载到monaco编辑器（切换标签调用）
+ */
+function loadTabToEditor() {
+  const fp = makeFilePath(activeTabPath.value)
+  const cache = fileContentCache.get(fp)
+  if (!cache || !monacoRef.value) return
+  const lang = extToLang(activeTabPath.value.ext)
+  monacoRef.value.loadFile(fp, cache.content, lang)
+}
+
+
 const value = ref('let a = 234')
 const language = ref('javascript')
 const input_text = ref("");
@@ -353,21 +389,15 @@ function dsb() {
 // }
 
 
-const isTauri = ref(!!(window as any).__TAURI__)
-const minimize = () => {
-  if (!isTauri.value) return
-  const appWindow = (window as any).__TAURI__.window.appWindow
-  appWindow.minimize()
+
+const minimize = async () => {
+  const result = await window.electronWindow?.minimize()
 }
-const toggleMax = () => {
-  if (!isTauri.value) return
-  const appWindow = (window as any).__TAURI__.window.appWindow
-  appWindow.toggleMaximize()
+const toggleMax = async () => {
+  const result = await window.electronWindow?.toggleMaximize()
 }
-const close = () => {
-  if (!isTauri.value) return
-  const appWindow = (window as any).__TAURI__.window.appWindow
-  appWindow.close()
+const close = async () => {
+  const result = await window.electronWindow?.close()
 }
 
 
@@ -485,44 +515,43 @@ function openTab(file: TabItem) {
 
 
 async function openFile() {
-  // // 弹出系统文件选择框，可限制后缀
-  // const selected = await open({
-  //   multiple: false, // true=多选文件
-  //   filters: [
-  //     {
-  //       name: '代码文件',
-  //       extensions: ['ts', 'js', 'vue', 'json', 'md', 'txt']
-  //     }
-  //   ]
-  // })
-  // if (!selected) return // 用户取消选择
+  const result = await window.fileAPI?.open()
+  if (!result) return
 
-  // const filePath = selected as string
-  // // 读取文本内容
-  // const content = await readTextFile(filePath)
-
-  // // 构造Tab（你现有的tab结构，按需修改）
-  // const newTab: TabItem = {
-  //   path: filePath,
-  //   name: filePath.split(/[\\/]/).pop()!, // 文件名
-  //   content,
-  //   dirty: false,
-  //   active: true
-  // }
-
-  // // 👉 插入到当前激活tab后面（你前面要的指定位置插入）
-  // const activeIndex = tabs.value.findIndex(t => t.active)
-  // if (activeIndex >= 0) {
-  //   tabs.value.splice(activeIndex + 1, 0, newTab)
-  // } else {
-  //   tabs.value.push(newTab)
-  // }
-
-  // // 把其他tab取消激活
-  // tabs.value.forEach(t => t.active = false)
-  // newTab.active = true
+  const newTab = new TabItem({ path: { dir: result.filePath.dir, name: result.filePath.name,  ext: result.filePath.ext}, dirty: false, preview: false });
+  
+  const fp = makeFilePath(result.filePath)
+  fileContentCache.set(fp, {
+    originContent: result.content,
+    content: result.content,
+    preview: false
+  })
+  openTab(newTab)
 }
 
+async function saveFile() {
+  const filePath = activeTabPath.value
+  const fp = makeFilePath(filePath)
+  const cache = fileContentCache.get(fp)
+  if (!cache) return
+
+  const result = await window.fileAPI?.save(cache.content, makeFilePath(filePath))
+  if (!result) return
+  console.log("fuck")
+  console.log(result.filePath)
+  console.log(cache.content)
+
+  // 更新缓存
+  cache.originContent = cache.content
+  cache.preview = false
+
+  // 更新tab状态
+  const tab = tabs.value.find(t => t.getFullPath() === fp)
+  if (tab) {
+    tab.props.dirty = false
+    tab.props.preview = false
+  }
+}
 
 </script>
 

@@ -1,7 +1,9 @@
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow, ipcMain, dialog } from 'electron'
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
+
+import { fileIpc } from './services'
 
 const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -32,6 +34,8 @@ function createWindow() {
     titleBarStyle: 'hidden',
     minWidth: 400,
     minHeight: 250,
+    height: 800,
+    width: 1200,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
     },
@@ -50,6 +54,7 @@ function createWindow() {
     // win.loadFile('dist/index.html')
     win.loadFile(path.join(RENDERER_DIST, 'index.html'))
   }
+  win.webContents.openDevTools()
 }
 
 // Quit when all windows are closed, except on macOS. There, it's common
@@ -70,4 +75,17 @@ app.on('activate', () => {
   }
 })
 
-app.whenReady().then(createWindow)
+app.whenReady().then(()=>{
+  fileIpc() // 一行注册整个文件模块IPC
+  // ============ IPC 注册窗口控制 ============
+  ipcMain.on('window:minimize', () => win?.minimize())
+  ipcMain.on('window:toggleMaximize', () => {
+    if (win?.isMaximized()) win.unmaximize()
+    else win?.maximize()
+  })
+  ipcMain.on('window:close', () => win?.close())
+  ipcMain.handle('window:isMaximized', () => win?.isMaximized() ?? false)
+  // ==================================
+
+  createWindow()
+})

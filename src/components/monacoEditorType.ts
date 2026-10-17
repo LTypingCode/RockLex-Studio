@@ -54,8 +54,8 @@
              enabled: true,
            },
            readOnly: false,
-           fontSize: 16,
-           scrollBeyondLastLine: false,
+           fontSize: 14,
+           scrollBeyondLastLine: true,
            overviewRulerBorder: false,
          }
        },
