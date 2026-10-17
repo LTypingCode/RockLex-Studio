@@ -2,14 +2,18 @@
 
 // Preload 暴露给 Renderer 的 API 类型（渲染进程 tsconfig 能读到这里）
 interface Window {
-  /** 窗口控制 API（来自 preload.ts） */
+  // 窗口控制 API
   electronWindow?: {
     minimize(): void
     toggleMaximize(): void
     close(): void
     isMaximized(): Promise<boolean>
   }
-  /** 文件操作 API（来自 preload.ts） */
+  // 系统信息 API
+  systemInfo?: {
+    getPlatform(): Promise<string>
+  }
+  // 文件操作 API
   fileAPI?: {
     open(filters?: { name: string; extensions: string[] }[]): Promise<{ content: string; filePath: { dir: string, name: string,  ext: string} } | null>
     save(content: string, filePath: string): Promise<{ filePath: { dir: string, name: string,  ext: string}; saved: boolean } | null>

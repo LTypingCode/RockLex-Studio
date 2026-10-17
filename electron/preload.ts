@@ -9,8 +9,12 @@ contextBridge.exposeInMainWorld('electronWindow', {
   isMaximized: () => ipcRenderer.invoke('window:isMaximized')
 })
 
+// 系统信息 API（必须和 main.ts 里的 ipcMain.handle 频道一一对应）
+contextBridge.exposeInMainWorld('systemInfo', {
+  getPlatform: () => ipcRenderer.invoke('system:platform'),
+})
 
-// 🆕 文件操作 API（必须和 main.ts 里的 ipcMain.handle 频道一一对应）
+// 文件操作 API（必须和 main.ts 里的 ipcMain.handle 频道一一对应）
 contextBridge.exposeInMainWorld('fileAPI', {
   open: (filters) => ipcRenderer.invoke('file:open', filters),
   save: (content, filePath) => ipcRenderer.invoke('file:save', content, filePath),

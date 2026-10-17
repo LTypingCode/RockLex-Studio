@@ -3,7 +3,7 @@ import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 
-import { fileIpc } from './services'
+import { systemInfo, fileIpc } from './services'
 
 const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -76,7 +76,8 @@ app.on('activate', () => {
 })
 
 app.whenReady().then(()=>{
-  fileIpc() // 一行注册整个文件模块IPC
+  systemInfo();
+  fileIpc(); // 一行注册整个文件模块IPC
   // ============ IPC 注册窗口控制 ============
   ipcMain.on('window:minimize', () => win?.minimize())
   ipcMain.on('window:toggleMaximize', () => {

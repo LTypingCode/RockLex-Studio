@@ -36,10 +36,11 @@
         </div>
 
       </div>
-      <div class="window-btns menu_click" v-if="true">
-        <button @click="minimize">−</button>
-        <button @click="toggleMax">□</button>
-        <button @click="close">×</button>
+      <div class="window-btns menu_click" v-if="system_platform == 'Windows'">
+        <button class="window-btns-none" @click="minimize">&#xE921;</button>
+        <button class="window-btns-none" @click="toggleMax">&#xE922;</button>
+        <button class="window-btns-close" @click="close" id="test" style="">&#xE8BB;</button>
+        <!-- <button @click="close" style="font-family: Segoe MDL2 Assets;font-size: 10px;">&#xE8BB;</button> -->
       </div>
     </header>
 
@@ -48,7 +49,7 @@
       orientation="horizontal"
       primary="start"
       size-unit="px"
-      :size="400"
+      :size="200"
       :min-size="200"
       :collapse-threshold="100"
       collapsible
@@ -205,15 +206,15 @@ function clickMenu(e: MouseEvent | void | boolean) {
   }
 }
 
-// onMounted(()=>{
-//   document.addEventListener('click',clickMenu)
-// })
-// onUnmounted(()=>{
-//   document.removeEventListener('click',clickMenu)
-// })
+var system_platform = ref<string>("unknown");
 
-
-
+onMounted(async () => {
+  try {
+    const p = await window.systemInfo?.getPlatform()
+    if (p) system_platform.value = p;
+  } catch (err) {
+  }
+})
 
 // =======================================
 
@@ -354,9 +355,10 @@ function loadTabToEditor() {
 const value = ref('let a = 234')
 const language = ref('javascript')
 const input_text = ref("");
-const abc = ref("关闭");
-function dsb() {
-  abc.value = abc.value === "点击" ? "关闭" : "点击";
+const abc = ref("none");
+async function dsb() {
+  const platform = await window.systemInfo?.getPlatform();
+  abc.value = platform ?? "undefined"
 }
 
 // Tauri
@@ -595,7 +597,7 @@ header {
 }
 
 .logo {
-  height: 50%;
+  height: 70%;
   object-fit: contain;
 }
 
@@ -681,9 +683,23 @@ header {
   background: transparent;
   color: #fff;
   cursor: pointer;
+
+  font-family: Segoe Fluent Icons;
+  font-size: 10px;
 }
-.window-btns button:hover {
+.window-btns-none:not(:hover) {
+  transition: background 0.2s ease;
+}
+.window-btns-none:hover {
   background: #333;
+  transition: background 0.2s ease 0.0s;
+}
+.window-btns-close:not(:hover) {
+  transition: background 0.2s ease;
+}
+.window-btns-close:hover {
+  background: red;
+  transition: background 0.2s ease 0.0s;
 }
 .pane {
   flex: 1;
