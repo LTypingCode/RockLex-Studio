@@ -5,13 +5,13 @@
       <div class="menu_left" >
         <img alt="Vue logo" class="logo" src="./assets/logo.svg"/>
         <div class="menu_list">
-          <div class="menu_button" @click="clickMenu();" @mouseenter="menuFiles($event);" id="file">文件</div>
-          <div class="menu_button" @click="clickMenu();" @mouseenter="menuFiles($event);" id="edit">编辑</div>
-          <div class="menu_button" @click="clickMenu();" @mouseenter="menuFiles($event);" id="selection">选择</div>
-          <div class="menu_button" @click="clickMenu();" @mouseenter="menuFiles($event);" id="view">查看</div>
+          <div class="menu_button menu_click" @click="clickMenu();" @mouseenter="menuFiles($event);" id="file">文件</div>
+          <div class="menu_button menu_click" @click="clickMenu();" @mouseenter="menuFiles($event);" id="edit">编辑</div>
+          <div class="menu_button menu_click" @click="clickMenu();" @mouseenter="menuFiles($event);" id="selection">选择</div>
+          <div class="menu_button menu_click" @click="clickMenu();" @mouseenter="menuFiles($event);" id="view">查看</div>
         </div>
 
-        <div class="menu_context" v-if="menuContext.show" :style="{ left: menuContext.x + 'px', top: menuContext.y + 'px' }">
+        <div class="menu_context menu_click" v-if="menuContext.show" :style="{ left: menuContext.x + 'px', top: menuContext.y + 'px' }">
           <div v-if="menuContext.id == 'file'">
             <div class="menu_item" @click="clickMenu(false);createTab(new_file);">新建文本文件<div>Ctrl+N</div></div>
             <div class="menu_item">新建文件…<div>Ctrl+Alt+Windows+N</div></div>
@@ -33,7 +33,7 @@
         </div>
 
       </div>
-      <div class="window-btns" v-if="isTauri">
+      <div class="window-btns menu_click" v-if="isTauri">
         <button @click="minimize">−</button>
         <button @click="toggleMax">□</button>
         <button @click="close">×</button>
@@ -593,6 +593,8 @@ header {
   padding: 0 10px;
   font-size:13px;
   color: #ccc;
+}
+.menu_click {
   -webkit-app-region: no-drag;
 }
 
