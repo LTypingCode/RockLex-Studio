@@ -16,7 +16,33 @@
       "target": "nsis"
     },
     "linux": {
-      "target": "AppImage"
+      "target": [
+        {
+          "target": "dir"
+        },
+        {
+          "target": "AppImage"
+        }
+      ],
+      "icon": "build/icon.png"
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ]
     },
     "electronDownload": {
       "mirror": "https://npmmirror.com/mirrors/electron/"
@@ -26,7 +52,9 @@
     "dev": "vite",
     "build": "run-p type-check build-only && electron-builder",
     "build:win": "run-p type-check build-only && electron-builder --win",
-    "build:linux": "run-p type-check build-only && electron-builder --linux",
+    "build:linux": "rm -rf /tmp/rocklex-build-out && run-p type-check build-only && electron-builder --linux --projectDir /tmp/rocklex-build-out && cp /tmp/rocklex-build-out/Rocklex-Studio-x86_64.AppImage release/",
+    "build:linux-dir": "run-p type-check build-only && electron-builder --linux --dir",
+    "build:linux-app": "cp -r release/linux-unpacked /tmp/appimage-build/dir && ARCH=x86_64 appimagetool /tmp/appimage-build/dir /tmp/appimage-build/release/Rocklex-Studio.AppImage && cp /tmp/appimage-build/release/Rocklex-Studio.AppImage release/ && rm -rf /tmp/appimage-build",
     "build:mac": "run-p type-check build-only && electron-builder --mac",
     "preview": "vite preview",
     "build-only": "vite build",
@@ -38,6 +66,7 @@
     "vue": "^3.5.29"
   },
   "devDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "^4.63.1",
     "@tsconfig/node24": "^24.0.4",
     "@types/node": "^24.11.0",
     "@vitejs/plugin-vue": "^6.0.4",
