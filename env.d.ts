@@ -8,6 +8,7 @@ interface Window {
     toggleMaximize(): void
     close(): void
     isMaximized(): Promise<boolean>
+    onStateChange: (cb: (state: { isMaximized: boolean }) => void) => () => void
   }
   // 系统信息 API
   systemInfo?: {

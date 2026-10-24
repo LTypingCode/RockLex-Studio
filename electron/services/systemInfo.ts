@@ -16,7 +16,7 @@ function getPlatform() {
     return platform;
 }
 
-export function systemInfo(win: BrowserWindow) {
+export function systemInfo() {
     ipcMain.handle('system:platform', async () => {
 		return getPlatform();
 	});

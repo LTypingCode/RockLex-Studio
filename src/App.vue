@@ -36,9 +36,12 @@
         </div>
 
       </div>
-      <div class="window-btns menu_click" v-if="system_platform == 'Windows'">
+      <div class="window-btns menu_click" v-if="systemPlatform == 'Windows'">
         <button class="window-btns-none" @click="minimize">&#xE921;</button>
-        <button class="window-btns-none" @click="toggleMax">&#xE922;</button>
+        <button class="window-btns-none" @click="toggleMax">
+          <div v-if="!winIsMax">&#xE922;</div>
+          <div v-if="winIsMax">&#xE923;</div>
+        </button>
         <button class="window-btns-close" @click="close" id="test" style="">&#xE8BB;</button>
         <!-- <button @click="close" style="font-family: Segoe MDL2 Assets;font-size: 10px;">&#xE8BB;</button> -->
       </div>
@@ -206,14 +209,28 @@ function clickMenu(e: MouseEvent | void | boolean) {
   }
 }
 
-var system_platform = ref<string>("unknown");
+const systemPlatform = ref<string>("unknown");
+const winIsMax = ref<boolean>(false);
+let unbindState: (() => void) | undefined
 
 onMounted(async () => {
   try {
+    // 获取系统平台信息接口
     const p = await window.systemInfo?.getPlatform()
-    if (p) system_platform.value = p;
+    if (p) systemPlatform.value = p;
+    // 监听窗口事件接口
+    unbindState = window.electronWindow?.onStateChange((state) => {
+      console.log('窗口状态：', state.isMaximized)
+      // 更新变量，切换图标
+      winIsMax.value = state.isMaximized
+    })
   } catch (err) {
   }
+})
+
+onUnmounted(() => {
+  // 解绑，防止内存泄漏
+  unbindState?.()
 })
 
 // =======================================
@@ -243,7 +260,7 @@ function extToLang(ext: string): string {
 
 // 拼接唯一key
 function makeFilePath(path: TabPath): string {
-  return `${path.dir}\\${path.name}.${path.ext}`
+  return `${path.dir}/${path.name}.${path.ext}`
 }
 
 // 模拟初始化测试文件缓存（你真实项目这里替换为读取磁盘）

@@ -74,7 +74,7 @@ async function getCurrentPath() {
 }
 
 // ============ IPC 注册入口（导出给main调用） ============
-export function fileIpc(win: BrowserWindow) {
+export function fileIpc() {
 	// 文件操作IPC
 	ipcMain.handle('file:open', async (_event, filters?: Electron.FileFilter[]) => {
 		return openFile(filters)
