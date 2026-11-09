@@ -1,34 +1,42 @@
 <template>
   <div class="vscode-tabbar">
     <!-- 左滚动按钮 -->
-    <button v-if="showScrollLeft" class="scroll-btn" @click="scrollLeft">‹</button>
+    <button v-if="showScrollLeft" class="scroll-btn scroll-btn-left" @click="scrollLeft">‹</button>
 
     <!-- Tab滚动容器 -->
     <div ref="scrollWrapRef" class="tab-scroll-wrap" @wheel.prevent="handleWheel" @contextmenu.prevent="openContextMenu($event, null)">
       <div ref="tabListRef" class="tab-list">
         <div
-          v-for="tab in tabs"
+          v-for="(tab, index) in tabs"
           :key="tab.getFullPath()"
-          class="tab-item"
-          :class="{ active: tabPathJoin(activePath) == tabPathJoin(tab.props.path) }"
+          class="tab-item-box"
+          :class="{
+            active: tabPathJoin(activePath) == tabPathJoin(tab.props.path),
+            active_prev: tabs[index+1]? tabPathJoin(activePath) == tabPathJoin(tabs[index+1]!.props.path) : false
+            }"
           @click="$emit('update:activePath', tab.props.path)"
           @mousedown.middle="$emit('close', tab.props.path)"
           @contextmenu.stop.prevent="openContextMenu($event, tab.props.path)"
           :title="tab.getFullPath()"
         >
-          <!-- 文件图标 -->
-          <span :style="getfileIconStyle(tab.props.path.ext)"></span>
-          <!-- 文件名 -->
-          <span class="tab-name" :class="{ preview: tab.props.preview }">{{ tab.getFileName() }}</span>
-          <!-- 关闭按钮 -->
-          <span  v-if="!tab.props.dirty" class="close-btn" @click.stop="$emit('close', tab.props.path)">×</span>
-          <span  v-if="tab.props.dirty" class="close-btn" @click.stop="$emit('close', tab.props.path)">●</span>
+          <div
+            class="tab-item"
+            :class="{ active: tabPathJoin(activePath) == tabPathJoin(tab.props.path) }"
+          >
+            <!-- 文件图标 -->
+            <span :style="getfileIconStyle(tab.props.path.ext)"></span>
+            <!-- 文件名 -->
+            <span class="tab-name" :class="{ preview: tab.props.preview }">{{ tab.getFileName() }}</span>
+            <!-- 关闭按钮 -->
+            <span  v-if="!tab.props.dirty" class="close-btn" @click.stop="$emit('close', tab.props.path)">×</span>
+            <span  v-if="tab.props.dirty" class="close-btn" @click.stop="$emit('close', tab.props.path)">●</span>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- 右滚动按钮 -->
-    <button v-if="showScrollRight" class="scroll-btn" @click="scrollRight">›</button>
+    <button v-if="showScrollRight" class="scroll-btn scroll-btn-right" @click="scrollRight">›</button>
 
     <!-- 右键菜单 -->
     <div
@@ -52,7 +60,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, watch, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, watch, onMounted, onUnmounted, nextTick, computed } from 'vue'
 
 import { TabItem } from '@/types/TabItem'
 import type { TabPath } from '@/types/TabItem'
@@ -61,6 +69,8 @@ import type { TabPath } from '@/types/TabItem'
 function tabPathJoin(path: TabPath) {
   return path.dir+'/'+path.name+'.'+path.ext;
 }
+
+
 
 const props = defineProps<{
   tabs: TabItem[]
@@ -200,7 +210,9 @@ onUnmounted(() => {
   align-items: center;
   height: 35px;
   background: #252526;
+  /* background: #1e1e1e; */
   user-select: none;
+  position: relative;
 }
 .scroll-btn {
   width: 24px;
@@ -211,6 +223,20 @@ onUnmounted(() => {
   cursor: pointer;
   font-size: 16px;
 }
+.scroll-btn-left {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 1;
+  border-radius: 0 10px 10px 0;
+}
+.scroll-btn-right {
+  position: absolute;
+  right: 0;
+  top: 0;
+  z-index: 1;
+  border-radius: 10px 0 0 10px;
+}
 .scroll-btn:hover {
   background: #383838;
 }
@@ -220,8 +246,39 @@ onUnmounted(() => {
   overflow: hidden;
 }
 .tab-list {
+  /* background-color: #1e1e1e; */
   display: flex;
   height: 100%;
+  padding-top: 5px;
+}
+.tab-item-box {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  /* padding: 5px 5px; */
+  height: 100%;
+  box-sizing: border-box;
+  color: #969696;
+  background-color: #252526;
+  /* border-right: 1px solid #1e1e1e; */
+  cursor: pointer;
+  position: relative;
+}
+.tab-item-box.active {
+  background: #1e1e1e;
+  color: #fff;
+  border-radius: 10px 10px 0 0;
+  border-top: 2px solid #007acc;
+}
+.tab-item-box.active_prev {
+  background: #1e1e1e;
+  color: #fff;
+  border-radius: 10px 10px 0 10px;
+}
+.tab-item-box.active + .tab-item-box {
+  background: #1e1e1e;
+  color: #fff;
+  border-radius: 10px 10px 10px 0;
 }
 .tab-item {
   display: flex;
@@ -231,7 +288,9 @@ onUnmounted(() => {
   height: 100%;
   box-sizing: border-box;
   color: #969696;
-  border-right: 1px solid #1e1e1e;
+  background-color: #252526;
+  /* border-right: 1px solid #1e1e1e; */
+  border-radius: 10px;
   cursor: pointer;
   position: relative;
 }
@@ -239,7 +298,7 @@ onUnmounted(() => {
   background: #1e1e1e;
   color: #fff;
 }
-.tab-item.active::after {
+/* .tab-item.active::after {
   content: '';
   position: absolute;
   top: 0;
@@ -247,7 +306,7 @@ onUnmounted(() => {
   width: 100%;
   height: 2px;
   background: #007acc;
-}
+} */
 .tab-item:hover:not(.active) {
   background: #2a2a2b;
   color: #ccc;
