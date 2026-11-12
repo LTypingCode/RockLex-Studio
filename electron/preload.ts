@@ -32,6 +32,9 @@ contextBridge.exposeInMainWorld('fileAPI', {
   saveAs: (content: string) => ipcRenderer.invoke('file:saveAs', content),
   new: () => ipcRenderer.invoke('file:new'),
   getCurrentPath: () => ipcRenderer.invoke('file:getCurrentPath'),
+  openDir: () => ipcRenderer.invoke('file:openDir'),
+  openByPath: (fullPath:string) => ipcRenderer.invoke('file:openByPath', fullPath),
+  loadDirChildren: (dirPath: string) => ipcRenderer.invoke('file:loadDirChildren', dirPath)
 })
 
 

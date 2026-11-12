@@ -16,11 +16,14 @@ interface Window {
   }
   // 文件操作 API
   fileAPI?: {
-    open(filters?: { name: string; extensions: string[] }[]): Promise<{ content: string; filePath: { dir: string, name: string,  ext: string} } | null>
-    save(content: string, filePath: string): Promise<{ filePath: { dir: string, name: string,  ext: string}; saved: boolean } | null>
+    open(filters?: { name: string; extensions: string[] }[]): Promise<{ ok: boolean, content: string; filePath: { dir: string, name: string,  ext: string} } | null>
+    save(content: string, filePath: string): Promise<{ filePath: { dir: string, name: string, ext: string}; saved: boolean } | null>
     saveAs(content: string): Promise<{ filePath: { dir: string, name: string,  ext: string}; saved: boolean } | null>
     new(): Promise<boolean>
     getCurrentPath(): Promise<string | null>
+    openDir(): Promise<{ filePath: { dir: string, name: string, ext: string} } | null>
+    loadDirChildren(dirPath: string): Promise<FileTreeNode[] | null>
+    openByPath(fullPath: string): Promise<{ ok: boolean, content: string, filePath: { dir: string, name: string, ext: string } } | null>
   }
 }
 

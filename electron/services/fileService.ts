@@ -1,5 +1,5 @@
 import { ipcMain, dialog, BrowserWindow } from 'electron'
-import { readFile, writeFile } from 'node:fs/promises'
+import { readFile, writeFile, readdir, open } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -26,9 +26,10 @@ async function openFile(filters?: Electron.FileFilter[]) {
 	})
 	if (result.canceled || result.filePaths.length === 0) return null
 	const filePath = result.filePaths[0]
-	const content = await readFile(filePath, 'utf-8')
-	currentFilePath = filePath
-	return { content, filePath: { dir: path.dirname(filePath), name: path.parse(filePath).name, ext: path.parse(filePath).ext.slice(1) } }
+	return openByPath(filePath)
+	// const content = await readFile(filePath, 'utf-8')
+	// currentFilePath = filePath
+	// return { content, filePath: { dir: path.dirname(filePath), name: path.parse(filePath).name, ext: path.parse(filePath).ext.slice(1) } }
 }
 
 /** 另存为业务逻辑 */
@@ -73,6 +74,100 @@ async function getCurrentPath() {
 	return currentFilePath
 }
 
+async function openDir() {
+	const res = await dialog.showOpenDialog({properties:['openDirectory']})
+	if(res.canceled) return null
+	const fullDirPath = res.filePaths[0]
+	const dir = path.dirname(fullDirPath)
+	const name = path.basename(fullDirPath)
+	return { filePath: { dir: dir, name: name, ext: ""} }
+}
+
+async function openByPath(fullPath: string) {
+  try{
+	const binary = await isBin(fullPath)
+	if (binary) {
+		const res = await dialog.showMessageBox({
+			type: 'warning',
+			title: 'RockLex Studio',
+			message: '打开文件警告',
+			detail: '此文件可能是二进制文件，不建议打开。',
+			buttons: ['取消', '仍然打开'],
+			defaultId: 0,
+			cancelId: 0
+		})
+		if(res.response === 0) return {ok:false}
+	}
+    const content = await readFile(fullPath, 'utf8')
+    const dir = path.dirname(fullPath)
+    const name = path.basename(fullPath)
+    const ext = path.extname(name).slice(1)
+    const pureName = path.basename(name, '.'+ext)
+    return {
+      ok:true,
+      content,
+      filePath:{
+        dir,
+        name: pureName,
+        ext
+      }
+    }
+  }catch(e){
+	console.log(e);
+    return {ok:false}
+  }
+}
+
+export interface FileTreeNode {
+  isDir: boolean
+  path: { dir: string, name: string, ext: string },
+  children: FileTreeNode[] | null
+}
+
+// 读取单层目录，返回FileTreeNode数组
+async function loadDirChildren(dirPath: string): Promise<FileTreeNode[]> {
+  const entries = await readdir(dirPath, { withFileTypes: true })
+  const list: FileTreeNode[] = []
+  for (const entry of entries) {
+    // const fullPath = path.join(dirPath, entry.name)
+	const parsed = path.parse(entry.name)
+	let name: string
+    let ext: string
+    if (entry.isDirectory()) {
+      // 文件夹：ext为空，name为原始文件夹名
+      name = entry.name
+      ext = ""
+    } else {
+      // 文件：拆分名称 + 后缀
+      name = parsed.name
+      ext = parsed.ext.slice(1) // 去掉开头的 "."
+    }
+
+    list.push({
+      isDir: entry.isDirectory(),
+	  path: { dir: dirPath, name, ext },
+      children: null,
+    })
+  }
+  return list
+}
+
+async function isBin(filePath: string): Promise<boolean> {
+  const fd = await open(filePath, 'r')
+  try {
+    const buf = Buffer.alloc(1024)
+    // ✅ 接收返回值拿到 bytesRead
+    const { bytesRead } = await fd.read(buf, 0, 1024)
+    if (bytesRead === 0) return false // 空文件，当做文本
+
+    // 缓冲区存在 0x00 空字节 → 判定二进制
+    return buf.subarray(0, bytesRead).includes(0x00)
+  } finally {
+    await fd.close() // finally 保证一定关闭文件句柄，防止句柄泄漏
+  }
+}
+
+
 // ============ IPC 注册入口（导出给main调用） ============
 export function fileIpc() {
 	// 文件操作IPC
@@ -99,5 +194,22 @@ export function fileIpc() {
 
 	ipcMain.handle('file:getCurrentPath', async () => {
 		return getCurrentPath()
+	})
+
+	ipcMain.handle('file:openByPath', async (_evt, fullPath: string)=>{
+		return openByPath(fullPath)
+	})
+	
+	ipcMain.handle('file:openDir', async ()=>{
+		return openDir()
+	})
+
+	ipcMain.handle('file:loadDirChildren', async (_evt, dirPath: string) => {
+		try {
+			return await loadDirChildren(dirPath)
+		} catch (e) {
+			console.error('读取目录失败', e)
+			return []
+		}
 	})
 }

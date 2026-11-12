@@ -43,7 +43,6 @@
           <div v-if="winIsMax">&#xE923;</div>
         </button>
         <button class="window-btns-close" @click="close" id="test" style="">&#xE8BB;</button>
-        <!-- <button @click="close" style="font-family: Segoe MDL2 Assets;font-size: 10px;">&#xE8BB;</button> -->
       </div>
     </header>
 
@@ -60,7 +59,18 @@
     >
       <template #start>
         <div class="sidebar">
-          <h4>资源管理器</h4>
+          <div class="file-explorer">
+            <div><h4>资源管理器</h4></div>
+            <div v-if="!projectRootTree"><button class="open-project-btn" @click="openProjectFolder">打开项目文件夹</button></div>
+            <div v-if="projectRootTree" class="file-tree-wrap">
+              <FileTree
+                :node="projectRootTree"
+                :selected-path="makeFilePath(activeTabPath)"
+                @select="handleTreeFileClick"
+                @mouse-right="rightClick"
+              />
+            </div>
+          </div>
         </div>
       </template>
       <template #divider>
@@ -174,8 +184,8 @@ import TabBar from'./components/TabBar.vue'
 import { TabItem } from '@/types/TabItem'
 import type { TabPath } from '@/types/TabItem'
 
-// import { open } from "@tauri-apps/plugin-dialog";
-// import { readTextFile } from "@tauri-apps/plugin-fs";
+import FileTree from './components/FileTree.vue'
+import { FileTreeNode } from '@/types/fileTree'
 
 // =============== menu 菜单 ===============
 
@@ -572,6 +582,44 @@ async function saveFile() {
   }
 }
 
+// ========== 文件树状态 ==========
+const projectRootTree = ref<FileTreeNode | null>(null)
+
+// 打开项目根文件夹
+async function openProjectFolder() {
+  const res = await window.fileAPI?.openDir()
+  if (!res) return
+  projectRootTree.value = new FileTreeNode({
+    path: { dir: res.filePath.dir, name: res.filePath.name, ext: ""},
+    isDir: true,
+    children: null
+  })
+}
+
+// 点击文件树的文件，打开Tab
+async function handleTreeFileClick(node: FileTreeNode) {
+  const fileRes = await window.fileAPI?.openByPath(node.getFullPath())
+  if (!fileRes) return
+  if (!(fileRes.filePath && fileRes.content !== undefined)) return
+
+  const newTab = new TabItem({
+    path: node.props.path,
+    dirty: false,
+    preview: false
+  })
+  const fp = makeFilePath(fileRes.filePath)
+  fileContentCache.set(fp, {
+    originContent: fileRes.content,
+    content: fileRes.content,
+    preview: false
+  })
+  openTab(newTab)
+}
+
+function rightClick(node: FileTreeNode) {
+  console.log(node.getFullPath())
+}
+
 </script>
 
 <style scoped>
@@ -728,7 +776,7 @@ header {
   height:100%;
   background:#252526;
   color:#ccc;
-  padding:8px;
+  /* padding:8px; */
 }
 .main-content {
   width:100%;
@@ -789,7 +837,54 @@ header {
   transition: none 0.2s ease 0.5s;
 }
 
+.file-explorer {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+}
 
+.file-explorer > div:not(.file-tree-wrap){
+  margin: 8px;
+  box-sizing:content-box;
+}
 
+.open-project-btn {
+  width:100%;
+  height: 30px;
+  padding:4px 8px;
+  margin-bottom:8px;
+  background:#333;
+  color:#fff;
+  border:1px solid #555;
+  border-radius:4px;
+  cursor:pointer;
+}
+.open-project-btn:hover {
+  background:#444;
+}
+.file-tree-wrap {
+  flex: 1;
+  overflow: auto;
+  min-height:0
+}
+
+</style>
+
+<style>
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-button{
+  display:none;
+}
 
 </style>

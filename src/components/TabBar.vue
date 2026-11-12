@@ -1,8 +1,5 @@
 <template>
   <div class="vscode-tabbar">
-    <!-- 左滚动按钮 -->
-    <button v-if="showScrollLeft" class="scroll-btn scroll-btn-left" @click="scrollLeft">‹</button>
-
     <!-- Tab滚动容器 -->
     <div ref="scrollWrapRef" class="tab-scroll-wrap" @wheel.prevent="handleWheel" @contextmenu.prevent="openContextMenu($event, null)">
       <div ref="tabListRef" class="tab-list">
@@ -34,6 +31,9 @@
         </div>
       </div>
     </div>
+
+    <!-- 左滚动按钮 -->
+    <button v-if="showScrollLeft" class="scroll-btn scroll-btn-left" @click="scrollLeft">‹</button>
 
     <!-- 右滚动按钮 -->
     <button v-if="showScrollRight" class="scroll-btn scroll-btn-right" @click="scrollRight">›</button>
@@ -227,14 +227,14 @@ onUnmounted(() => {
   position: absolute;
   left: 0;
   top: 0;
-  z-index: 1;
+  /* z-index: 1; */
   border-radius: 0 10px 10px 0;
 }
 .scroll-btn-right {
   position: absolute;
   right: 0;
   top: 0;
-  z-index: 1;
+  /* z-index: 1; */
   border-radius: 10px 0 0 10px;
 }
 .scroll-btn:hover {
